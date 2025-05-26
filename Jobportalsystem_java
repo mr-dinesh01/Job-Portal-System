@@ -1,0 +1,204 @@
+import java.util.*;
+import java.util.List;
+
+public class Jobportalsystem {
+    private static final String EMPLOYER_FILE = "Employer.txt";
+    private static final String JOBSEEKER_FILE = "Jobseeker.txt";
+    private static final String JOB_FILE = "Job.txt";
+    private static final String APPLICATION_FILE = "Jobapplication.txt";
+
+    private List<Employer> employers;
+    private List<Jobseeker> jobSeekers;
+    private List<Job> jobs;
+    private List<Jobapplication> applications;
+    private Scanner scanner;
+
+    public Jobportalsystem() {
+        employers = Filehandler.loadEmployers(EMPLOYER_FILE);
+        jobSeekers = Filehandler.loadJobSeekers(JOBSEEKER_FILE);
+        jobs = Filehandler.loadJobs(JOB_FILE);
+        applications = Filehandler.loadApplications(APPLICATION_FILE);
+        scanner = new Scanner(System.in);
+    }
+
+    public void start() {
+        while (true) {
+            System.out.println("\n--- Job Portal ---");
+            System.out.println("1. Register as Employer");
+            System.out.println("2. Register as Job Seeker");
+            System.out.println("3. Login as Employer");
+            System.out.println("4. Login as Job Seeker");
+            System.out.println("5. Exit");
+            System.out.print("Choose option: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (choice) {
+                case 1 -> registerEmployer();
+                case 2 -> registerJobSeeker();
+                case 3 -> loginEmployer();
+                case 4 -> loginJobSeeker();
+                case 5 -> {
+                    saveData();
+                    System.out.println("Thank you for using Job Portal!");
+                    return;
+                }
+                default -> System.out.println("Invalid choice!");
+            }
+        }
+    }
+
+    private void registerEmployer() {
+        System.out.print("Email: ");
+        String email = scanner.nextLine();
+        System.out.print("Password: ");
+        String password = scanner.nextLine();
+        Employer employer = new Employer(email, password);
+        employers.add(employer);
+        Filehandler.saveEmployers(EMPLOYER_FILE, employers);
+        System.out.println("Employer registered successfully!");
+    }
+
+    private void registerJobSeeker() {
+        System.out.print("Email: ");
+        String email = scanner.nextLine();
+        System.out.print("Password: ");
+        String password = scanner.nextLine();
+        System.out.print("Resume: ");
+        String resume = scanner.nextLine();
+        Jobseeker seeker = new Jobseeker(email, password, resume);
+        jobSeekers.add(seeker);
+        Filehandler.saveJobSeekers(JOBSEEKER_FILE, jobSeekers);
+        System.out.println("Job Seeker registered successfully!");
+    }
+
+    private void loginEmployer() {
+        System.out.print("Email: ");
+        String email = scanner.nextLine();
+        System.out.print("Password: ");
+        String password = scanner.nextLine();
+
+        for (Employer e : employers) {
+            if (e.getEmail().equals(email) && e.validatePassword(password)) {
+                System.out.println("Welcome");
+                employerMenu(e);
+                return;
+            }
+        }
+        System.out.println("Invalid!");
+    }
+
+    private void loginJobSeeker() {
+        System.out.print("Email: ");
+        String email = scanner.nextLine();
+        System.out.print("Password: ");
+        String password = scanner.nextLine();
+
+        for (Jobseeker js : jobSeekers) {
+            if (js.getEmail().equals(email) && js.validatePassword(password)) {
+                System.out.println("Welcome");
+                jobSeekerMenu(js);
+                return;
+            }
+        }
+        System.out.println("Invalid!");
+    }
+
+    private void employerMenu(Employer employer) {
+        while (true) {
+            System.out.println("\n--- Employer Menu ---");
+            System.out.println("1. Post a Job");
+            System.out.println("2. View Applicants");
+            System.out.println("3. Logout");
+            System.out.print("Choose option: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (choice) {
+                case 1 -> postJob(employer);
+                case 2 -> viewApplicants();
+                case 3 -> {
+                    return;
+                }
+                default -> System.out.println("Invalid choice!");
+            }
+        }
+    }
+
+    private void postJob(Employer employer) {
+        System.out.print("Enter Job ID: ");
+        String jobid = scanner.nextLine();
+        System.out.print("Job Title: ");
+        String title = scanner.nextLine();
+        System.out.print("Job Description: ");
+        String description = scanner.nextLine();
+        System.out.print("Salary: ");
+        double salary = scanner.nextDouble();
+        scanner.nextLine();
+
+        Job job = new Job(jobid, title, description, salary);
+        jobs.add(job);
+        Filehandler.saveJobs(JOB_FILE, jobs);
+        System.out.println("Job posted successfully!");
+    }
+
+    private void viewApplicants() {
+        System.out.println("\n--- Applicants ---");
+        for (Jobapplication application : applications) {
+            System.out.println("Job ID: " + application.getJobId() + ", Job Seeker Email: " + application.getJobseekeremail());
+        }
+    }
+
+    private void jobSeekerMenu(Jobseeker seeker) {
+        while (true) {
+            System.out.println("\n--- Job Seeker Menu ---");
+            System.out.println("1. View Jobs");
+            System.out.println("2. Apply for a Job");
+            System.out.println("3. Logout");
+            System.out.print("Choose option: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (choice) {
+                case 1 -> viewJobs(); 
+                case 2 -> applyForJob(seeker);
+                case 3 -> {
+                    return;
+                }
+                default -> System.out.println("Invalid choice!");
+            }
+        }
+    }
+
+    private void viewJobs() {
+        System.out.println("\n--- Available Jobs ---");
+        for (Job job : jobs) {
+            System.out.println("Job ID: " + job.getJobId());
+            System.out.println("Title: " + job.getTitle());
+            System.out.println("Description: " + job.getDescription());
+            System.out.println("Salary: " + job.getSalary());
+            System.out.println("---------------------------");
+        }
+    }
+    private void applyForJob(Jobseeker seeker) {
+        System.out.print("Enter Job ID to apply for: ");
+        String jobid = scanner.nextLine();
+
+        Jobapplication application = new Jobapplication(jobid, seeker.getEmail());
+        applications.add(application);
+        Filehandler.saveApplications(APPLICATION_FILE, applications);
+        System.out.println("Application submitted!");
+    }
+
+    private void saveData() {
+        Filehandler.saveEmployers(EMPLOYER_FILE, employers);
+        Filehandler.saveJobSeekers(JOBSEEKER_FILE, jobSeekers);
+        Filehandler.saveJobs(JOB_FILE, jobs);
+        Filehandler.saveApplications(APPLICATION_FILE, applications);
+    }
+
+    public static void main(String[] args) {
+        Jobportalsystem system = new Jobportalsystem();
+        system.start();
+    }
+}
